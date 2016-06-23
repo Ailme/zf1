@@ -20,9 +20,9 @@
  * @version    $Id$
  */
 
-require_once dirname(__FILE__) . '/TestCommon.php';
+// require_once dirname(__FILE__) . '/TestCommon.php';
 
-require_once 'Zend/Barcode/Object/Code25.php';
+// require_once 'Zend/Barcode/Object/Code25.php';
 
 /**
  * @category   Zend

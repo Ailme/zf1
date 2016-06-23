@@ -20,12 +20,12 @@
  * @version    $Id$
  */
 
-require_once dirname(__FILE__) . '/AbstractFeedTest.php';
+// require_once dirname(__FILE__) . '/AbstractFeedTest.php';
 
 /**
  * @see Zend_Feed_Atom
  */
-require_once 'Zend/Feed/Atom.php';
+// require_once 'Zend/Feed/Atom.php';
 
 /**
  * @category   Zend

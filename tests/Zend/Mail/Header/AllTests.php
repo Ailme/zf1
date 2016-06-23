@@ -24,8 +24,8 @@ if (!defined('PHPUnit_MAIN_METHOD')) {
     define('PHPUnit_MAIN_METHOD', 'Zend_Mail_Header_AllTests::main');
 }
 
-require_once 'Zend/Mail/Header/HeaderNameTest.php';
-require_once 'Zend/Mail/Header/HeaderValueTest.php';
+// require_once 'Zend/Mail/Header/HeaderNameTest.php';
+// require_once 'Zend/Mail/Header/HeaderValueTest.php';
 
 /**
  * @category   Zend

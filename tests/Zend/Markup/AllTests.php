@@ -24,9 +24,9 @@ if (!defined('PHPUnit_MAIN_METHOD')) {
     define('PHPUnit_MAIN_METHOD', 'Zend_Markup_AllTests::main');
 }
 
-require_once 'Zend/Markup/BbcodeAndHtmlTest.php';
-require_once 'Zend/Markup/ParserIntegrityTest.php';
-require_once 'Zend/Markup/FactoryTest.php';
+// require_once 'Zend/Markup/BbcodeAndHtmlTest.php';
+// require_once 'Zend/Markup/ParserIntegrityTest.php';
+// require_once 'Zend/Markup/FactoryTest.php';
 
 /**
  * @category   Zend

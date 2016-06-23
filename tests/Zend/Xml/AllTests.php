@@ -24,8 +24,8 @@ if (!defined('PHPUnit_MAIN_METHOD')) {
     define('PHPUnit_MAIN_METHOD', 'Zend_Xml_AllTests::main');
 }
 
-require_once 'Zend/Xml/MultibyteTest.php';
-require_once 'Zend/Xml/SecurityTest.php';
+// require_once 'Zend/Xml/MultibyteTest.php';
+// require_once 'Zend/Xml/SecurityTest.php';
 
 /**
  * @category   Zend

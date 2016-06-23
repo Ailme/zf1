@@ -20,8 +20,8 @@
  * @version    $Id$
  */
 
-require_once 'Zend/Reflection/File.php';
-require_once 'Zend/Reflection/Docblock/Tag/Param.php';
+// require_once 'Zend/Reflection/File.php';
+// require_once 'Zend/Reflection/Docblock/Tag/Param.php';
 
 /**
  * @category   Zend
@@ -44,7 +44,7 @@ class Zend_Reflection_Docblock_Tag_ParamTest extends PHPUnit_Framework_TestCase
     {
         if (self::$_sampleClassFileRequired === false) {
             $fileToRequire = dirname(dirname(dirname(__FILE__))) . '/_files/TestSampleClass.php';
-            require_once $fileToRequire;
+            // require_once $fileToRequire;
             self::$_sampleClassFileRequired = true;
         }
     }

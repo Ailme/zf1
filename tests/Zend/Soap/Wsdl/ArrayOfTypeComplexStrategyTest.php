@@ -20,13 +20,13 @@
  * @version    $Id$
  */
 
-require_once dirname(__FILE__)."/../_files/commontypes.php";
+// require_once dirname(__FILE__)."/../_files/commontypes.php";
 
 /** Zend_Soap_Wsdl */
-require_once 'Zend/Soap/Wsdl.php';
+// require_once 'Zend/Soap/Wsdl.php';
 
 /** Zend_Soap_Wsdl_Strategy_ArrayOfTypeComplex */
-require_once 'Zend/Soap/Wsdl/Strategy/ArrayOfTypeComplex.php';
+// require_once 'Zend/Soap/Wsdl/Strategy/ArrayOfTypeComplex.php';
 
 /**
  * @category   Zend

@@ -27,17 +27,17 @@ if (!defined('PHPUnit_MAIN_METHOD')) {
 /**
  * @see Zend_Service_Amazon_SimpleDb_OfflineTest
  */
-require_once 'Zend/Service/Amazon/SimpleDb/OfflineTest.php';
+// require_once 'Zend/Service/Amazon/SimpleDb/OfflineTest.php';
 
 /**
  * @see Zend_Service_Amazon_SimpleDb_OnlineTest
  */
-require_once 'Zend/Service/Amazon/SimpleDb/OnlineTest.php';
+// require_once 'Zend/Service/Amazon/SimpleDb/OnlineTest.php';
 
 /**
  * @see Zend_Service_Amazon_SimpleDb_PageTest
  */
-require_once 'Zend/Service/Amazon/SimpleDb/PageTest.php';
+// require_once 'Zend/Service/Amazon/SimpleDb/PageTest.php';
 
 /**
  * @category   Zend
