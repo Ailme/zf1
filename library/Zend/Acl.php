@@ -817,14 +817,16 @@ class Zend_Acl
      * and its respective parents are checked similarly before the lower-priority parents of
      * the Role are checked.
      *
-     * @param  Zend_Acl_Role_Interface|string     $role
+     * @param  Zend_Acl_Role_Interface|string $role
      * @param  Zend_Acl_Resource_Interface|string $resource
-     * @param  string                             $privilege
+     * @param  string $privilege
+     * @param array $params
+     *
+     * @return bool
      * @uses   Zend_Acl::get()
      * @uses   Zend_Acl_Role_Registry::get()
-     * @return boolean
      */
-    public function isAllowed($role = null, $resource = null, $privilege = null)
+    public function isAllowed($role = null, $resource = null, $privilege = null, array $params = array())
     {
         // reset role & resource to null
         $this->_isAllowedRole = null;
@@ -853,18 +855,18 @@ class Zend_Acl
             // query on all privileges
             do {
                 // depth-first search on $role if it is not 'allRoles' pseudo-parent
-                if (null !== $role && null !== ($result = $this->_roleDFSAllPrivileges($role, $resource, $privilege))) {
+                if (null !== $role && null !== ($result = $this->_roleDFSAllPrivileges($role, $resource, $params))) {
                     return $result;
                 }
 
                 // look for rule on 'allRoles' psuedo-parent
                 if (null !== ($rules = $this->_getRules($resource, null))) {
                     foreach ($rules['byPrivilegeId'] as $privilege => $rule) {
-                        if (self::TYPE_DENY === ($ruleTypeOnePrivilege = $this->_getRuleType($resource, null, $privilege))) {
+                        if (self::TYPE_DENY === ($ruleTypeOnePrivilege = $this->_getRuleType($resource, null, $privilege, $params))) {
                             return false;
                         }
                     }
-                    if (null !== ($ruleTypeAllPrivileges = $this->_getRuleType($resource, null, null))) {
+                    if (null !== ($ruleTypeAllPrivileges = $this->_getRuleType($resource, null, null, $params))) {
                         return self::TYPE_ALLOW === $ruleTypeAllPrivileges;
                     }
                 }
@@ -878,14 +880,14 @@ class Zend_Acl
             // query on one privilege
             do {
                 // depth-first search on $role if it is not 'allRoles' pseudo-parent
-                if (null !== $role && null !== ($result = $this->_roleDFSOnePrivilege($role, $resource, $privilege))) {
+                if (null !== $role && null !== ($result = $this->_roleDFSOnePrivilege($role, $resource, $privilege, $params))) {
                     return $result;
                 }
 
                 // look for rule on 'allRoles' pseudo-parent
-                if (null !== ($ruleType = $this->_getRuleType($resource, null, $privilege))) {
+                if (null !== ($ruleType = $this->_getRuleType($resource, null, $privilege, $params))) {
                     return self::TYPE_ALLOW === $ruleType;
-                } else if (null !== ($ruleTypeAllPrivileges = $this->_getRuleType($resource, null, null))) {
+                } else if (null !== ($ruleTypeAllPrivileges = $this->_getRuleType($resource, null, null, $params))) {
                     return self::TYPE_ALLOW === $ruleTypeAllPrivileges;
                 }
 
@@ -919,24 +921,26 @@ class Zend_Acl
      * This method returns true if a rule is found and allows access. If a rule exists and denies access,
      * then this method returns false. If no applicable rule is found, then this method returns null.
      *
-     * @param  Zend_Acl_Role_Interface     $role
+     * @param  Zend_Acl_Role_Interface $role
      * @param  Zend_Acl_Resource_Interface $resource
-     * @return boolean|null
+     * @param array $params
+     *
+     * @return bool|null
      */
-    protected function _roleDFSAllPrivileges(Zend_Acl_Role_Interface $role, Zend_Acl_Resource_Interface $resource = null)
+    protected function _roleDFSAllPrivileges(Zend_Acl_Role_Interface $role, Zend_Acl_Resource_Interface $resource = null, array $params = array())
     {
         $dfs = array(
             'visited' => array(),
             'stack'   => array()
             );
 
-        if (null !== ($result = $this->_roleDFSVisitAllPrivileges($role, $resource, $dfs))) {
+        if (null !== ($result = $this->_roleDFSVisitAllPrivileges($role, $resource, $dfs, $params))) {
             return $result;
         }
 
         while (null !== ($role = array_pop($dfs['stack']))) {
             if (!isset($dfs['visited'][$role->getRoleId()])) {
-                if (null !== ($result = $this->_roleDFSVisitAllPrivileges($role, $resource, $dfs))) {
+                if (null !== ($result = $this->_roleDFSVisitAllPrivileges($role, $resource, $dfs, $params))) {
                     return $result;
                 }
             }
@@ -953,14 +957,16 @@ class Zend_Acl
      *
      * This method is used by the internal depth-first search algorithm and may modify the DFS data structure.
      *
-     * @param  Zend_Acl_Role_Interface     $role
+     * @param  Zend_Acl_Role_Interface $role
      * @param  Zend_Acl_Resource_Interface $resource
-     * @param  array                  $dfs
-     * @return boolean|null
+     * @param  array $dfs
+     * @param array $params
+     *
+     * @return bool|null
      * @throws Zend_Acl_Exception
      */
     protected function _roleDFSVisitAllPrivileges(Zend_Acl_Role_Interface $role, Zend_Acl_Resource_Interface $resource = null,
-                                                 &$dfs = null)
+                                                 &$dfs = null, array $params = array())
     {
         if (null === $dfs) {
             /**
@@ -972,11 +978,11 @@ class Zend_Acl
 
         if (null !== ($rules = $this->_getRules($resource, $role))) {
             foreach ($rules['byPrivilegeId'] as $privilege => $rule) {
-                if (self::TYPE_DENY === ($ruleTypeOnePrivilege = $this->_getRuleType($resource, $role, $privilege))) {
+                if (self::TYPE_DENY === ($ruleTypeOnePrivilege = $this->_getRuleType($resource, $role, $privilege, $params))) {
                     return false;
                 }
             }
-            if (null !== ($ruleTypeAllPrivileges = $this->_getRuleType($resource, $role, null))) {
+            if (null !== ($ruleTypeAllPrivileges = $this->_getRuleType($resource, $role, null, $params))) {
                 return self::TYPE_ALLOW === $ruleTypeAllPrivileges;
             }
         }
@@ -996,14 +1002,16 @@ class Zend_Acl
      * This method returns true if a rule is found and allows access. If a rule exists and denies access,
      * then this method returns false. If no applicable rule is found, then this method returns null.
      *
-     * @param  Zend_Acl_Role_Interface     $role
+     * @param  Zend_Acl_Role_Interface $role
      * @param  Zend_Acl_Resource_Interface $resource
-     * @param  string                      $privilege
-     * @return boolean|null
+     * @param  string $privilege
+     * @param array $params
+     *
+     * @return bool|null
      * @throws Zend_Acl_Exception
      */
     protected function _roleDFSOnePrivilege(Zend_Acl_Role_Interface $role, Zend_Acl_Resource_Interface $resource = null,
-                                            $privilege = null)
+                                            $privilege = null, array $params = array())
     {
         if (null === $privilege) {
             /**
@@ -1018,13 +1026,13 @@ class Zend_Acl
             'stack'   => array()
             );
 
-        if (null !== ($result = $this->_roleDFSVisitOnePrivilege($role, $resource, $privilege, $dfs))) {
+        if (null !== ($result = $this->_roleDFSVisitOnePrivilege($role, $resource, $privilege, $dfs, $params))) {
             return $result;
         }
 
         while (null !== ($role = array_pop($dfs['stack']))) {
             if (!isset($dfs['visited'][$role->getRoleId()])) {
-                if (null !== ($result = $this->_roleDFSVisitOnePrivilege($role, $resource, $privilege, $dfs))) {
+                if (null !== ($result = $this->_roleDFSVisitOnePrivilege($role, $resource, $privilege, $dfs, $params))) {
                     return $result;
                 }
             }
@@ -1041,15 +1049,17 @@ class Zend_Acl
      *
      * This method is used by the internal depth-first search algorithm and may modify the DFS data structure.
      *
-     * @param  Zend_Acl_Role_Interface     $role
+     * @param  Zend_Acl_Role_Interface $role
      * @param  Zend_Acl_Resource_Interface $resource
-     * @param  string                      $privilege
-     * @param  array                       $dfs
-     * @return boolean|null
+     * @param  string $privilege
+     * @param  array $dfs
+     * @param array $params
+     *
+     * @return bool|null
      * @throws Zend_Acl_Exception
      */
     protected function _roleDFSVisitOnePrivilege(Zend_Acl_Role_Interface $role, Zend_Acl_Resource_Interface $resource = null,
-                                                $privilege = null, &$dfs = null)
+                                                $privilege = null, &$dfs = null, array $params = array())
     {
         if (null === $privilege) {
             /**
@@ -1067,9 +1077,9 @@ class Zend_Acl
             throw new Zend_Acl_Exception('$dfs parameter may not be null');
         }
 
-        if (null !== ($ruleTypeOnePrivilege = $this->_getRuleType($resource, $role, $privilege))) {
+        if (null !== ($ruleTypeOnePrivilege = $this->_getRuleType($resource, $role, $privilege, $params))) {
             return self::TYPE_ALLOW === $ruleTypeOnePrivilege;
-        } else if (null !== ($ruleTypeAllPrivileges = $this->_getRuleType($resource, $role, null))) {
+        } else if (null !== ($ruleTypeAllPrivileges = $this->_getRuleType($resource, $role, null, $params))) {
             return self::TYPE_ALLOW === $ruleTypeAllPrivileges;
         }
 
@@ -1098,12 +1108,14 @@ class Zend_Acl
      * based on whether its assertion method passes.
      *
      * @param  Zend_Acl_Resource_Interface $resource
-     * @param  Zend_Acl_Role_Interface     $role
-     * @param  string                      $privilege
-     * @return string|null
+     * @param  Zend_Acl_Role_Interface $role
+     * @param  string $privilege
+     * @param array $params
+     *
+     * @return null|string
      */
     protected function _getRuleType(Zend_Acl_Resource_Interface $resource = null, Zend_Acl_Role_Interface $role = null,
-                                    $privilege = null)
+                                    $privilege = null, array $params = array())
     {
         // get the rules for the $resource and $role
         if (null === ($rules = $this->_getRules($resource, $role))) {
@@ -1130,7 +1142,8 @@ class Zend_Acl
                 $this,
                 ($this->_isAllowedRole instanceof Zend_Acl_Role_Interface) ? $this->_isAllowedRole : $role,
                 ($this->_isAllowedResource instanceof Zend_Acl_Resource_Interface) ? $this->_isAllowedResource : $resource,
-                $this->_isAllowedPrivilege
+                $this->_isAllowedPrivilege,
+                $params
                 );
         }
 
