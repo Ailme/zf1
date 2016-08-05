@@ -1167,7 +1167,7 @@ class Zend_Db_Select
                 if ($target instanceof Zend_Db_Select) {
                     $target = $target->assemble();
                 }
-                $sql .= $target;
+                $sql .= '(' . $target . ')';
                 if ($cnt < $parts - 1) {
                     $sql .= ' ' . $type . ' ';
                 }
