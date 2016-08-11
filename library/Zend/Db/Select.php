@@ -469,13 +469,19 @@ class Zend_Db_Select
      * $db->fetchAll($select, array('id' => 5));
      * </code>
      *
-     * @param string   $cond  The WHERE condition.
+     * @param string|Zend_Db_Select   $cond  The WHERE condition.
      * @param mixed    $value OPTIONAL The value to quote into the condition.
      * @param int      $type  OPTIONAL The type of the given value
      * @return Zend_Db_Select This Zend_Db_Select object.
      */
     public function where($cond, $value = null, $type = null)
     {
+        if ($cond instanceof Zend_Db_Select) {
+            $cond = $cond->getWhereAsString();
+            $value = null;
+            $type = null;
+        }
+
         $this->_parts[self::WHERE][] = $this->_where($cond, $value, $type, true);
 
         return $this;
@@ -486,7 +492,7 @@ class Zend_Db_Select
      *
      * Otherwise identical to where().
      *
-     * @param string   $cond  The WHERE condition.
+     * @param string|Zend_Db_Select   $cond  The WHERE condition.
      * @param mixed    $value OPTIONAL The value to quote into the condition.
      * @param int      $type  OPTIONAL The type of the given value
      * @return Zend_Db_Select This Zend_Db_Select object.
@@ -495,6 +501,12 @@ class Zend_Db_Select
      */
     public function orWhere($cond, $value = null, $type = null)
     {
+        if ($cond instanceof Zend_Db_Select) {
+            $cond = $cond->getWhereAsString();
+            $value = null;
+            $type = null;
+        }
+
         $this->_parts[self::WHERE][] = $this->_where($cond, $value, $type, false);
 
         return $this;
@@ -872,7 +884,14 @@ class Zend_Db_Select
      * * joinRightUsing
      * * joinLeftUsing
      *
+     * @param $type
+     * @param $name
+     * @param $cond
+     * @param string $cols
+     * @param null $schema
+     *
      * @return Zend_Db_Select This Zend_Db_Select object.
+     * @throws Zend_Db_Select_Exception
      */
     public function _joinUsing($type, $name, $cond, $cols = '*', $schema = null)
     {
@@ -920,11 +939,13 @@ class Zend_Db_Select
     /**
      * Adds to the internal table-to-column mapping array.
      *
-     * @param  string $tbl The table/join the columns come from.
+     * @param $correlationName
      * @param  array|string $cols The list of columns; preferably as
      * an array, but possibly as a string containing one column.
-     * @param  bool|string True if it should be prepended, a correlation name if it should be inserted
-     * @return void
+     * @param null $afterCorrelationName
+     *
+     * @internal param string $tbl The table/join the columns come from.
+     * @internal param bool|string $True if it should be prepended, a correlation name if it should be inserted
      */
     protected function _tableCols($correlationName, $cols, $afterCorrelationName = null)
     {
@@ -993,11 +1014,13 @@ class Zend_Db_Select
     /**
      * Internal function for creating the where clause
      *
-     * @param string   $condition
-     * @param mixed    $value  optional
-     * @param string   $type   optional
-     * @param boolean  $bool  true = AND, false = OR
-     * @return string  clause
+     * @param string $condition
+     * @param mixed $value optional
+     * @param string $type optional
+     * @param boolean $bool true = AND, false = OR
+     *
+     * @return string clause
+     * @throws Zend_Db_Select_Exception
      */
     protected function _where($condition, $value = null, $type = null, $bool = true)
     {
@@ -1358,4 +1381,219 @@ class Zend_Db_Select
         return (string)$sql;
     }
 
+    /**
+     * @param $cond
+     *
+     * @return Zend_Db_Select
+     */
+    public function whereIsNull($cond)
+    {
+        $cond .= " IS NULL";
+
+        return $this->where($cond);
+    }
+
+    /**
+     * @param $cond
+     *
+     * @return Zend_Db_Select
+     */
+    public function whereIsNotNull($cond)
+    {
+        $cond .= " IS NOT NULL";
+
+        return $this->where($cond);
+    }
+
+    /**
+     * @param $cond
+     *
+     * @return Zend_Db_Select
+     */
+    public function orWhereIsNull($cond)
+    {
+        $cond .= " IS NULL";
+
+        return $this->orWhere($cond);
+    }
+
+    /**
+     * @param $cond
+     *
+     * @return Zend_Db_Select
+     */
+    public function orWhereIsNotNull($cond)
+    {
+        $cond .= " IS NOT NULL";
+
+        return $this->orWhere($cond);
+    }
+
+    /**
+     * @return array
+     */
+    public function getWhere()
+    {
+        return $this->getPart(self::WHERE);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getWhereAsString()
+    {
+        return $cond = implode(" ", $this->getWhere());
+    }
+
+    /**
+     * @param string $cond without ?
+     * @param $value
+     *
+     * @return Zend_Db_Select
+     */
+    public function whereLike($cond, $value)
+    {
+        return $this->where("$cond LIKE ?", $value);
+    }
+
+    /**
+     * @param string $cond without ?
+     * @param $value
+     *
+     * @return Zend_Db_Select
+     */
+    public function orWhereLike($cond, $value)
+    {
+        return $this->orWhere("$cond LIKE ?", $value);
+    }
+
+    /**
+     * @param string $cond without ?
+     * @param string|array $values
+     *
+     * @return Zend_Db_Select
+     */
+    public function whereIn($cond, $values)
+    {
+        if (!is_array($values)) {
+            $values = preg_split('#[,;]#', (string)$values);
+        }
+
+        $values = array_values($values);
+
+        if (sizeof($values) === 1) {
+            foreach ($values as $value) {
+                $this->where($cond . " = ?", $value);
+            }
+        } else {
+            $this->where($cond . " IN (" . $this->arrayConvertToIn($values) . ")");
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $cond without ?
+     * @param string|array $values
+     *
+     * @return Zend_Db_Select
+     */
+    public function orWhereIn($cond, $values)
+    {
+        if (!is_array($values)) {
+            $values = preg_split('#[,;]#', (string)$values);
+        }
+
+        $values = array_values($values);
+
+        if (sizeof($values) === 1) {
+            foreach ($values as $value) {
+                $this->orWhere($cond . " = ?", $value);
+            }
+        } else {
+            $this->orWhere($cond . " IN (" . $this->arrayConvertToIn($values) . ")");
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $cond without ?
+     * @param string|array $values
+     *
+     * @return Zend_Db_Select
+     */
+    public function whereNotIn($cond, $values)
+    {
+        if (!is_array($values)) {
+            $values = preg_split('#[,;]#', (string)$values);
+        }
+
+        $values = array_values($values);
+
+        if (sizeof($values) === 1) {
+            foreach ($values as $value) {
+                $this->where($cond . " != ?", $value);
+            }
+        } else {
+            $this->where($cond . " NOT IN (" . $this->arrayConvertToIn($values) . ")");
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $cond without ?
+     * @param string|array $values
+     *
+     * @return Zend_Db_Select
+     */
+    public function orWhereNotIn($cond, $values)
+    {
+        if (!is_array($values)) {
+            $values = preg_split('#[,;]#', (string)$values);
+        }
+
+        $values = array_values($values);
+
+        if (sizeof($values) === 1) {
+            foreach ($values as $value) {
+                $this->orWhere($cond . " != ?", $value);
+            }
+        } else {
+            $this->orWhere($cond . " NOT IN (" . $this->arrayConvertToIn($values) . ")");
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $list
+     *
+     * @return array
+     */
+    protected function quoteArray(array $list)
+    {
+        return array_map(function ($item) {
+            return $this->_adapter->quote($item);
+        }, $list);
+    }
+
+    /**
+     * @param array $list
+     *
+     * @return string
+     */
+    protected function arrayConvertToIn(array $list)
+    {
+        return implode(",", $this->quoteArray($list));
+    }
+
+    /**
+     * @return null|string
+     */
+    public function asSql()
+    {
+        return $this->assemble();
+    }
 }
